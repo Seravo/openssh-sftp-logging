@@ -35,7 +35,7 @@ static const char *DOC_STRING =
 "\n"
 "to:\n"
 "\n"
-"    Subsystem sftp sftpwrapper -c SSH_CLIENT -- /usr/lib/openssh/sftp-server\n"
+"    Subsystem sftp /usr/local/bin/sftpwrapper -c SSH_CLIENT -- /usr/lib/openssh/sftp-server\n"
 "\n"
 "BUGS AND LIMITATIONS:\n"
 "\n"

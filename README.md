@@ -8,7 +8,7 @@ Change the following line in sshd_config from:
 
 to
 
-    Subsystem sftp sftpwrapper -c SSH_CLIENT -- /usr/lib/openssh/sftp-server
+    Subsystem sftp /usr/local/bin/sftpwrapper -c SSH_CLIENT -- /usr/lib/openssh/sftp-server
 
 # BUGS AND LIMITATIONS
 
@@ -25,4 +25,6 @@ to
 
 Copyright 2020 Seravo Oy.
 
-You can mail feedback and improvements to Heikki Orsila <heikki.orsila@iki.fi>
+You can mail feedback and improvements to
+Heikki Orsila \<heikki.orsila@iki.fi\>.
+
