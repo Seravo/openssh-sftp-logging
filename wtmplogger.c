@@ -76,7 +76,7 @@ static void wtmp_write(const struct utmp *ut)
 
 static void write_ut(const short ut_type,
 		     const pid_t sshd_pid,
-		     const char *tty,
+		     const char *ut_line,
 		     const char *user,
 		     const char *host,
 		     const struct addrinfo *addrinfo)
@@ -86,7 +86,7 @@ static void write_ut(const short ut_type,
 		.ut_pid = sshd_pid,
 		.ut_tv.tv_sec = time(NULL),
 	};
-	snprintf(ut.ut_line, sizeof(ut.ut_line), "%s", tty);
+	snprintf(ut.ut_line, sizeof(ut.ut_line), "%s", ut_line);
 	if (user != NULL)
 		snprintf(ut.ut_user, sizeof(ut.ut_name), "%s", user);
 	if (host != NULL)
@@ -220,11 +220,50 @@ static void check_parent_processes(void)
 	}
 }
 
-int main(int argc, char *argv[])
+static char *define_ut_line(char *notty)
 {
 	char *tty = ttyname(STDIN_FILENO);
 	const char *ttyprefix = "/dev/";
 	const size_t ttyprefixlen = strlen(ttyprefix);
+	char *ut_line = NULL;
+
+	if (tty == NULL) {
+		tty = notty;
+	} else {
+		if (strncmp(tty, "/dev/", ttyprefixlen) == 0)
+			tty += ttyprefixlen;
+	}
+
+#ifdef WTMPLOGGER_NO_PARENT_PROCESS_CHECK
+	do {
+		/*
+		 * We can not trust information provided by parent for logging
+		 * so we prepend "sftp:" (string) to ut_line to indicate this.
+		 */
+		const char *prefix = "sftp:";
+		size_t ut_line_size;
+		int ret;
+		ut_line_size = strlen(prefix) + strlen(tty) + 1;
+		ut_line = malloc(ut_line_size);
+		if (ut_line == NULL)
+			log_fatal("No memory for ut_line\n");
+		ret = snprintf(ut_line, ut_line_size, "%s%s", prefix, tty);
+		if ((size_t) ret >= ut_line_size)
+			log_fatal("Too long a string for ut_line\n");
+	} while (0);
+#else
+	ut_line = strdup(tty);
+	if (ut_line == NULL)
+		log_fatal("No memory for ut_line\n");
+#endif
+
+	return ut_line;
+}
+
+
+int main(int argc, char *argv[])
+{
+	char *ut_line = NULL;
 	char *notty = "notty";  /* Which line to log when there is no tty */
 	char *host = "";   /* Which host to log by default */
 	struct addrinfo *addrinfo = NULL;
@@ -234,20 +273,17 @@ int main(int argc, char *argv[])
 	if (log_name == NULL)
 		log_fatal("No SUDO_USER env\n");
 
+#ifndef WTMPLOGGER_NO_PARENT_PROCESS_CHECK
 	check_parent_processes();
+#endif
 
 	read_args(&ut_type, &sshd_pid, &notty, &host, argc, argv);
 
-	if (tty == NULL) {
-		tty = notty;
-	} else {
-		if (strncmp(tty, "/dev/", ttyprefixlen) == 0)
-			tty += ttyprefixlen;
-	}
+	ut_line = define_ut_line(notty);
 
 	if (ut_type == USER_PROCESS)
 		parse_address(&addrinfo, host);
 
-	write_ut(ut_type, sshd_pid, tty, log_name, host, addrinfo);
+	write_ut(ut_type, sshd_pid, ut_line, log_name, host, addrinfo);
 	return 0;
 }
