@@ -1,6 +1,8 @@
 *sftpwrapper* is a tool that logs SFTP sessions into *wtmp* on GNU/Linux.
 The tool makes SFTP sessions visible for commands like *w* and *last*.
 
+![Image of last shell command](doc/last-screenshot.jpg)
+
 # Introduction
 
 OpenSSH server logs interactive SSH sessions into *utmp*/*wtmp* so that
@@ -9,38 +11,54 @@ Sessions without a TTY are not logged. And therefore, OpenSSH does not log
 SFTP sessions into utmp/wtmp.
 
 *sftpwrapper* tool enables administrators to make SFTP sessions loggable.
-sftpwrapper takes over new SFTP sessions, logs new sessions and executes
-the actual sftp-server under itself. When the session is done, sftpwrapper
+*sftpwrapper* takes over new SFTP sessions, logs new sessions and executes
+the actual sftp-server under itself. When the session is done, *sftpwrapper*
 logs the session as being over.
 
 # Installation
 
-1. Compile binaries:
+## 0. Install dependencies
+
+On Debian/Ubuntu, `build-essential` package is needed.
+Specifically, C library headers (`libc-dev`) and
+compiling tools (`gcc` and `make`) are needed.
+
+## 1. Compile binaries:
 ```
 $ make
 ```
 
-2. Install binaries:
+## 2. Install binaries:
+
 ```
 $ sudo make install
 ```
 
-3. Enable sudo for /usr/local/bin/wtmplogger binary for users to log.
+## 3. Enable sudo for /usr/local/bin/wtmplogger binary for users to log.
 
-Example: Enable users in *wtmploggers* group to execute the binary:
+Every user that can login with ssh should be allowed to sudo execute
+`/usr/local/bin/wtmplogger`. In web hosting services this group is often
+www-data, but here *wtmploggers* is used as an example group name.
+Edit sudo configs as follows:
+
 ```
 $ sudoedit /etc/sudoers.d/wtmp-privilege
 ```
-And insert line:
+
+Insert the following line into `/etc/sudoers.d/wtmp-privilege`:
+
 ```
 %wtmploggers    ALL = NOPASSWD: /usr/local/bin/wtmplogger
 ```
 
-4. Change the following line in sshd_config from:
+## 4. Change the following line in sshd_config from:
+
 ```
 Subsystem sftp /usr/lib/openssh/sftp-server
 ```
+
 to
+
 ```
 Subsystem sftp /usr/local/bin/sftpwrapper -c SSH_CLIENT -- /usr/lib/openssh/sftp-server
 ```
