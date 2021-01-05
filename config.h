@@ -3,6 +3,8 @@
 
 #include <sys/types.h>
 
+#define SFTPWRAPPER_DEFAULT_NOTTY "sftp"
+
 struct process_check {
 	char *name;
 	uid_t euid;

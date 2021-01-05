@@ -264,7 +264,8 @@ static char *define_ut_line(char *notty)
 int main(int argc, char *argv[])
 {
 	char *ut_line = NULL;
-	char *notty = "notty";  /* Which line to log when there is no tty */
+	/* Which line to log when there is no tty */
+	char *notty = SFTPWRAPPER_DEFAULT_NOTTY;
 	char *host = "";   /* Which host to log by default */
 	struct addrinfo *addrinfo = NULL;
 	int ut_type = 0;

@@ -132,7 +132,7 @@ static int parse_options(char **notty, char **host, int argc, char *argv[])
 			if (*notty == NULL) {
 				/* Note: we don't fail for this */
 				log_error("No memory for no-tty\n");
-				*notty = "notty";
+				*notty = SFTPWRAPPER_DEFAULT_NOTTY;
 			}
 			break;
 		case 'v':
@@ -157,7 +157,8 @@ int main(int argc, char *argv[])
 	int ret = EXIT_SUCCESS;
 	pid_t child;
 	int exec_ind;
-	char *no_tty = "notty";  /* What to log when there is no tty */
+	/* What to log when there is no tty */
+	char *no_tty = SFTPWRAPPER_DEFAULT_NOTTY;
 	char *host = NULL;  /* Which host to log */
 
 	exec_ind = parse_options(&no_tty, &host, argc, argv);
